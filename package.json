@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "mssql": "^12.0.0",
-    "redis": "^5.0.0",
+    "redis": "^6.2.1",
     "@azure/identity": "^4.0.0",
     "@azure/storage-blob": "^12.0.0"
   }
