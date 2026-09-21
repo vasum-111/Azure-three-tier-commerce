@@ -1,0 +1,29 @@
+apiVersion: batch/v1
+kind: Job
+metadata: {name: commerce-bootstrap, namespace: portfolio}
+spec:
+  backoffLimit: 3
+  ttlSecondsAfterFinished: 3600
+  template:
+    metadata:
+      labels:
+        azure.workload.identity/use: "true"
+    spec:
+      restartPolicy: Never
+      serviceAccountName: commerce
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        seccompProfile: {type: RuntimeDefault}
+      containers:
+        - name: seed
+          image: ${IMAGE}
+          command: [node, src/bootstrap.mjs]
+          envFrom:
+            - secretRef: {name: commerce-config}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities: {drop: [ALL]}
+          resources:
+            requests: {cpu: 100m, memory: 128Mi}
+            limits: {cpu: 500m, memory: 512Mi}

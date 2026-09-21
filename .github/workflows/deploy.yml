@@ -1,0 +1,38 @@
+name: Deploy approved Azure release
+on:
+  workflow_dispatch:
+    inputs:
+      approve_cost:
+        description: 'Type DEPLOY to authorize a release to the existing approved Azure environment'
+        required: true
+        type: string
+permissions:
+  contents: read
+  id-token: write
+concurrency:
+  group: azure-production
+  cancel-in-progress: false
+jobs:
+  release:
+    if: inputs.approve_cost == 'DEPLOY' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: azure-production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '24'}
+      - run: npm ci && npm test
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      - uses: azure/use-kubelogin@v1
+        with: {kubelogin-version: 'v0.2.10'}
+      - name: Build, push and roll out
+        run: bash scripts/release.sh
+        env:
+          AZURE_COST_APPROVED: 'yes'
+          AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+          RESOURCE_GROUP: ${{ vars.RESOURCE_GROUP }}
+          IMAGE_TAG: ${{ github.sha }}

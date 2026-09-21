@@ -1,0 +1,30 @@
+[
+  {
+    "id": "desk-lamp",
+    "name": "Arc desk lamp",
+    "priceCents": 4900,
+    "category": "Lighting",
+    "glyph": "◠"
+  },
+  {
+    "id": "ceramic-mug",
+    "name": "Studio ceramic mug",
+    "priceCents": 1800,
+    "category": "Everyday",
+    "glyph": "◡"
+  },
+  {
+    "id": "linen-notebook",
+    "name": "Linen notebook",
+    "priceCents": 1400,
+    "category": "Stationery",
+    "glyph": "▤"
+  },
+  {
+    "id": "desk-tray",
+    "name": "Oak desk tray",
+    "priceCents": 2900,
+    "category": "Organization",
+    "glyph": "▱"
+  }
+]

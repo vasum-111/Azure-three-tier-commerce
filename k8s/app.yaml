@@ -1,0 +1,84 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: commerce
+  namespace: portfolio
+  annotations:
+    azure.workload.identity/client-id: "${APP_CLIENT_ID}"
+automountServiceAccountToken: false
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: commerce
+  namespace: portfolio
+spec:
+  replicas: 2
+  revisionHistoryLimit: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate: {maxSurge: 1, maxUnavailable: 0}
+  selector:
+    matchLabels: {app: commerce}
+  template:
+    metadata:
+      labels:
+        app: commerce
+        azure.workload.identity/use: "true"
+    spec:
+      serviceAccountName: commerce
+      terminationGracePeriodSeconds: 20
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile: {type: RuntimeDefault}
+      containers:
+        - name: app
+          image: ${IMAGE}
+          ports: [{containerPort: 8080}]
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: {drop: [ALL]}
+          resources:
+            requests: {cpu: 100m, memory: 128Mi}
+            limits: {cpu: 500m, memory: 512Mi}
+          envFrom:
+            - secretRef: {name: commerce-config}
+          env:
+            - {name: DATA_MODE, value: azure}
+            - {name: COMMERCE, value: "true"}
+          startupProbe:
+            httpGet: {path: /healthz, port: 8080}
+            periodSeconds: 5
+            failureThreshold: 30
+          readinessProbe:
+            httpGet: {path: /readyz, port: 8080}
+            periodSeconds: 5
+          livenessProbe:
+            httpGet: {path: /healthz, port: 8080}
+            periodSeconds: 15
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: commerce
+  namespace: portfolio
+  annotations:
+    service.beta.kubernetes.io/azure-load-balancer-internal: "true"
+    service.beta.kubernetes.io/azure-pls-create: "true"
+    service.beta.kubernetes.io/azure-pls-name: "commerce-pls"
+spec:
+  type: LoadBalancer
+  selector: {app: commerce}
+  ports: [{port: 80, targetPort: 8080}]
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata: {name: commerce, namespace: portfolio}
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels: {app: commerce}

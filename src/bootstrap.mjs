@@ -1,0 +1,5 @@
+import {AzureStore} from './azure-store.mjs';
+import {readFile,readdir} from 'node:fs/promises';
+import sql from 'mssql';
+const s=await AzureStore.connect();
+try{await s.pool.request().batch(await readFile(new URL('../data/schema.sql',import.meta.url),'utf8'));const products=JSON.parse(await readFile(new URL('../data/products.json',import.meta.url),'utf8'));for(const p of products){await s.pool.request().input('id',sql.VarChar(60),p.id).input('name',sql.NVarChar(120),p.name).input('price',sql.Int,p.priceCents).input('category',sql.NVarChar(60),p.category).input('glyph',sql.NVarChar(8),p.glyph).query('IF NOT EXISTS(SELECT 1 FROM dbo.Products WHERE id=@id) INSERT INTO dbo.Products(id,name,priceCents,category,glyph) VALUES(@id,@name,@price,@category,@glyph)');}for(const f of await readdir(new URL('../assets/',import.meta.url))){const data=await readFile(new URL('../assets/'+f,import.meta.url));await s.blobs.getBlockBlobClient(f).upload(data,data.length,{blobHTTPHeaders:{blobContentType:'image/svg+xml'}});}console.log('Schema, catalog and images initialized.');}finally{await s.close();}
