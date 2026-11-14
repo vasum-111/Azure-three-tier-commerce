@@ -5,7 +5,7 @@
 
 A compact commerce demo that connects presentation, application and data tiers using Azure services.
 
-**[Open browser preview](https://vasum-111.github.io/azure-three-tier-commerce/)** · **[Deployment guide](DEPLOYMENT.md)** · **[Operations & tradeoffs](OPERATIONS.md)**
+**[Open browser preview](https://vasum-111.github.io/Azure-Three-Tier-Commerce/)** · **[Deployment guide](DEPLOYMENT.md)** · **[Operations & tradeoffs](OPERATIONS.md)**
 
 > **Deployment status:** the public browser preview is static hosting on GitHub Pages. It uses sample data and does not call an Azure backend. Azure resources have **not** been provisioned; cloud deployment awaits subscription access and cost approval. Bicep compilation and local tests are validation, not evidence of a successful Azure deployment.
 
